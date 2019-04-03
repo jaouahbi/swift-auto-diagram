@@ -66,19 +66,34 @@ end
 
 def allEntities(codeString)
   entities = []
-  entityRegex = /(?<entityType>(class|struct|protocol|enum))\s+(?!(var|open|public|internal|fileprivate|private|func))(?<name>\w+)(?<genericPart>(<.*>)?)(?<inheritancePart>([^{]*)?)(?<contentsCodeString>{(?>[^{}]|\g<contentsCodeString>)*})/
+  
+  #entityRegex = /(?<entityType>(class|struct|protocol|enum))\s+(?!(var|open|public|internal|fileprivate|private|func))(?<name>\w+)(?<genericPart>(<.*>)?)(?<inheritancePart>([^{]*)?)(?<contentsCodeString>{(?>[^{}]|\g<contentsCodeString>)*})/
+
+  entityRegex = /(?<entityType>(class|struct|protocol|enum))\s+(?!(var|open|public|internal|fileprivate|private|func))(?<name>\w+)(?<genericPart>(<.*>:)?)(?<inheritancePart>([^{]*)?)(?<contentsCodeString>{(?>[^{}]|\g<contentsCodeString>)*})/
 
   codeString.scan(entityRegex) do
     matchData = Regexp.last_match
 
     entityType = matchData['entityType']
     entityName = matchData['name']
-
     inheritancePart = matchData['inheritancePart']
     inheritancePart.delete! ':'
     inheritancePart.gsub! /\s/, ''
+    
+    # Fix the template inheritance bug
+    index = inheritancePart.index('<')
+    if index
+        if index == 0
+            # inheritance not found
+            inheritancePart = ""
+        else
+            # remove all after '<' inclusive
+            inheritancePart = inheritancePart.slice(0..(index-1))
+        end
+    end
+    
     inheritedEntities = inheritancePart.split ','
-
+    
     contentsCodeString = matchData['contentsCodeString'][1...-1]
 
     startIndex = matchData.begin(0)
@@ -107,14 +122,24 @@ end
 
 def allExtensions(codeString)
   extensions = []
-  extensionRegex = /extension\s+(?!(var|open|public|internal|fileprivate|private|func))(?<extendedEntityName>\w+)(?<protocols>(\s*:.+?)?)(?<generics>(\s+where\s+.+?)?)(?<contentsCodeString>{(?>[^{}]|\g<contentsCodeString>)*})/
+  #extensionRegex = /extension\s+(?!(var|open|public|internal|fileprivate|private|func))(?<extendedEntityName>\w+)(?<protocols>(\s*:.+?)?)(?<generics>(\s+where\s+.+?)?)(?<contentsCodeString>{(?>[^{}]|\g<contentsCodeString>)*})/
 
+   extensionRegex = /extension\s+(?!(var|open|public|internal|fileprivate|private|func))(?<extendedEntityName>\w+)(?<protocols>([^{]*)?)(?<contentsCodeString>{(?>[^{}]|\g<contentsCodeString>)*})/
+  
+      
   codeString.scan(extensionRegex) do
     matchData = Regexp.last_match
 
     extendedEntityName = matchData['extendedEntityName']
-
+    
     protocols = matchData['protocols']
+    
+    # Fix the extension template "where" bug
+        
+    if protocols.include? "where"
+         protocols = ""
+    end
+
     protocols.delete! ':'
     protocols.gsub! /\s/, ''
     protocols = protocols.split ','
@@ -370,5 +395,5 @@ def updateEntitiesJSONStringInScript(entitiesStrings, scriptFileName)
 end
 
 def openFile(fileName)
-  system %(open "#{fileName}")
+  system %(open -a "Google\ Chrome" "#{fileName}")
 end

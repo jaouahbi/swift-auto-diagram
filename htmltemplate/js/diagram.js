@@ -48,6 +48,50 @@ function createDiagram() {
     var entity = entities[i];
     var hasDependencies = false;
 
+    // Added as workaround for fix the unnamed extensions
+      
+    // To get the png image from the network object of vis
+    // reference: https://stackoverflow.com/questions/42663203/export-visjs-network-to-jpeg-png-image
+    // network.on("afterDrawing", function (ctx) {console.info(ctx.canvas.toDataURL({format: 'png', quality: 1.0}));});
+    // convert: https://onlinepngtools.com/convert-base64-to-png
+      
+    // TODO: use filter
+    if (typeof entity.name === 'undefined') {
+        for (var j = 0; j < entities.length; j++) {
+            var ent = entities[j];
+            if(!(typeof ent.extensions === 'undefined')) {
+                // Find the extension id in the entity extensions array of id's
+                // TODO: use filter
+                
+//                var fent = ent.extensions.filter(x => x.id === entity.id)
+//                if (fent.length == 1) {
+//                    entity.name = fent[0].name
+//                }
+                
+                for (var x = 0; x < ent.extensions.length; x++) {
+                    if (entity.id === ent.extensions[x]) {
+                        // Update the entity extension name
+                        entity.name = ent.name
+                        break;
+                    }
+                }
+            }
+        }
+    }
+      
+    // Fix the entity name from a generic type
+    for (var j = 0; j < entities.length; j++) {
+        var ent = entities[j];
+        if (!(typeof ent.name === 'undefined')) {
+            var name =  ent.name
+            var n = name.indexOf('<');
+            name = name.substring(0, n != -1 ? n : name.length);
+            n = name.indexOf('>');
+            name = name.substring(0, n != -1 ? n : name.length);
+            ent.name = name
+        }
+    }
+      
     maxEdgeLength = Math.max(maxEdgeLength, length);
 
     nodes.push({
@@ -112,15 +156,15 @@ function createDiagram() {
     edges: edges
   };
 
-  // tested at http://visjs.org/examples/network/physics/physicsConfiguration.html
+// tested at http://visjs.org/examples/network/physics/physicsConfiguration.html
   let options = {
     edges: {
       smooth: false
     },
     physics: {
       forceAtlas2Based: {
-        gravitationalConstant: -500,
-        springLength: 100,
+        gravitationalConstant: -200,
+        springLength: 0,
         avoidOverlap: 1
       },
       maxVelocity: 68,
@@ -134,6 +178,7 @@ function createDiagram() {
     }
   };
 
+    
   network = new vis.Network(container, data, options);
   // network.clusterByConnection(1);
 

@@ -26,17 +26,28 @@ function networkLabel(entity) {
     return "Undefined";
   }
 
-  return (
-    "<b>" +
-    entity.name +
-    ":</b><i>" +
-    entity.typeString +
-    "</i>" +
-    "\n ----------------- \n" +
-    itemsString(entity.properties) +
-    "\n ----------------- \n" +
-    itemsString(entity.methods)
-  );
+//  return (
+//    "<b>" +
+//    entity.name +
+//    ":</b><i>" +
+//    entity.typeString +
+//    "</i>" +
+//    "\n ----------------- \n" +
+//    itemsString(entity.properties) +
+//    "\n ----------------- \n" +
+//    itemsString(entity.methods)
+//  );
+    
+    
+    return (
+            "\n" +
+            "<b>" +
+            entity.name +
+            ":</b><i>" +
+            entity.typeString +
+            "</i>" +
+            "\n\n"
+            );
 }
 
 function color(typeString) {
